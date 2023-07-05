@@ -26,10 +26,20 @@ pipeline {
                 }
             }
         }
-        stage('Deliver') {
+        stage('Manual Approval') {
+            steps {
+                input(message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed', submitterParameter: 'APPROVER')
+            }
+        }
+        stage('Deploy') {
             agent {
                 docker {
                     image 'cdrx/pyinstaller-linux:python2'
+                }
+            }
+            when {
+                expression {
+                    return env.APPROVER == 'Proceed'
                 }
             }
             steps {
@@ -39,6 +49,18 @@ pipeline {
                 success {
                     archiveArtifacts 'dist/add2vals'
                 }
+            }
+        }
+        stage('Delay') {
+            steps {
+                script {
+                    sleep(time: 60, unit: 'SECONDS')
+                }
+            }
+        }
+        stage('Finish') {
+            steps {
+                echo 'Proses selesai.'
             }
         }
     }
